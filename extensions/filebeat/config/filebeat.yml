@@ -1,0 +1,18 @@
+name: filebeat
+
+filebeat.inputs:
+- type: filestream
+  id: service-logs
+  paths:
+    - /var/log/*/*.log
+  prospector.scanner.fingerprint.length: 128
+  prospector.scanner.fingerprint.offset: 0
+
+output.elasticsearch:
+  hosts: [ http://elasticsearch:9200 ]
+  username: filebeat_internal
+  password: password
+
+http:
+  enabled: true
+  host: 0.0.0.0
