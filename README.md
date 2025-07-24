@@ -79,7 +79,9 @@ const combineMessageWithUserMetaFormat = winston.format((info) => {
 
 const logger = winston.createLogger({
   format: winston.format.combine(
-    combineMessageWithUserMetaFormat(),
+    // combineMessageWithUserMetaFormat(),
+    winston.format.errors({ stack: true }),
+    winston.format.json(),
     ecsFormat({
       convertReqRes: true,
       apmIntegration: true,
@@ -97,9 +99,25 @@ const logger = winston.createLogger({
   ]
 });
 
+// Create a Morgan-compatible stream that writes to Winston
+const morganStream = {
+  write: (message) => {
+    // Remove the newline that Morgan adds to the end of each log
+    const trimmedMessage = message.trim();
+    logger.info('HTTP Access Log', {
+      type: 'access_log',
+      http_log: trimmedMessage
+    });
+  }
+};
+
+export { morganStream };
+export default logger;
+
 const express = require('express');
 const axios = require('axios');
 const http = require('http');
+import morganLogger from 'morgan';
 
 const httpAgent = new http.Agent({ keepAlive: true, keepAliveMsecs: 3000, maxSockets: 2, maxTotalSockets: 4 });
 
@@ -109,6 +127,8 @@ const axiosInstance = axios.create({
 
 const app = express();
 const port = 3000;
+
+app.use(morganLogger('short', { stream: morganStream }));
 
 app.get('/api/call-service-2', async (req, res) => {
   const { query } = req;
