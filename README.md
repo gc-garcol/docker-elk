@@ -6,6 +6,51 @@ Use the [template](https://github.com/deviantony/docker-elk)
 
 ![log](./docs/log.png)
 
+## Architecture
+
+```mermaid
+graph TD
+    %% Node.js Services
+    subgraph "Node.js Services"
+        A[Service A Node.js]
+        B[Service B Node.js]
+
+        A_logs[Log A]
+        A_apm[APM Agent A]
+
+        B_logs[Log B]
+        B_apm[APM Agent B]
+
+        
+        A --> A_logs
+        A --> A_apm
+
+        B --> B_logs
+        B --> B_apm
+    end
+    
+    %% Observability Stack
+    subgraph "Observability Stack"
+        filebeat[Filebeat]
+        apmServer[APM Server]
+        elastic[Elasticsearch]
+        kibana[Kibana]
+    end
+    
+    %% Log pipeline
+    A_logs --> filebeat
+    B_logs --> filebeat
+    filebeat --> elastic
+    
+    %% APM pipeline
+    A_apm --> apmServer
+    B_apm --> apmServer
+    apmServer --> elastic
+    
+    %% Visualization
+    elastic --> kibana
+```
+
 ## Setup
 
 All in one:
